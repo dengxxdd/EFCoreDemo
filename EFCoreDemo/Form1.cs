@@ -137,191 +137,229 @@ namespace EFCoreDemo
             //dataGridView1.DataSource = leaders;
             #endregion
 
-            for (int i = 3; i < dt.Rows.Count; i++)
+            try
             {
-                DataRow dr = dt.Rows[i];//9  13
-
-                if (!(dr[0].ToString().Equals("") && dr[9].ToString().Equals("") && dr[13].ToString().Equals("")))
+                for (int i = 4; i < dt.Rows.Count; i++)
                 {
+                    DataRow dr = dt.Rows[i];//9  13
 
-                    //如果表格第1列不为空，说明有领导干部信息
-                    if (!dr[0].ToString().Equals(""))
+                    if (!(dr[0].ToString().Equals("") && dr[9].ToString().Equals("") && dr[13].ToString().Equals("")))
                     {
-                        if(!(leader.CardNo == null || leader.CardNo.Length == 0))
+
+                        //如果表格第1列不为空，说明有领导干部信息
+                        if (!dr[0].ToString().Equals(""))
                         {
-                            if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
+                            if (!(leader.CardNo == null || leader.CardNo.Length == 0))
                             {
-                                if (familyMember.ReportBusinesses == null)
+                                if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
                                 {
-                                    familyMember.ReportBusinesses = new List<ReportBusiness>();
+                                    if (familyMember.ReportBusinesses == null)
+                                    {
+                                        familyMember.ReportBusinesses = new List<ReportBusiness>();
+                                    }
+                                    familyMember.ReportBusinesses.Add(reportBusiness);
+                                    reportBusiness = new ReportBusiness();
                                 }
-                                familyMember.ReportBusinesses.Add(reportBusiness);
-                                reportBusiness = new ReportBusiness();
+
+                                if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
+                                {
+                                    if (leader.FamilyMembers == null)
+                                    {
+                                        leader.FamilyMembers = new List<FamilyMember>();
+                                    }
+                                    leader.FamilyMembers.Add(familyMember);
+                                    familyMember = new FamilyMember();
+                                }
+
+                                leaders.Add(leader);
+                                leader = new Leader();
+                            }
+                            leader.OrderId = int.Parse(dr[0].ToString());
+                            leader.FullName = dr[1].ToString();
+                            leader.CardNo = dr[2].ToString();
+
+                            if (!IDCardValidation.CheckIDCard(leader.CardNo))
+                            {
+                                throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错：" + leader.FullName + "身份证校验未出错");
                             }
 
-                            if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
+                            leader.Post = dr[3].ToString();
+                            leader.Rank = dr[4].ToString();
+                            if (dr[5].ToString().Equals("是"))
                             {
-                                if (leader.FamilyMembers == null)
-                                {
-                                    leader.FamilyMembers = new List<FamilyMember>();
-                                }
-                                leader.FamilyMembers.Add(familyMember);
-                                familyMember = new FamilyMember();
-                            }                            
-
-                            leaders.Add(leader);
-                            leader = new Leader();
-                        }
-                        leader.OrderId = int.Parse(dr[0].ToString());
-                        leader.FullName = dr[1].ToString();
-                        leader.CardNo = dr[2].ToString();
-                        leader.Post = dr[3].ToString();
-                        leader.Rank = dr[4].ToString();
-                        if (dr[5].ToString().Equals("是"))
-                        {
-                            leader.IsExist = true;
-                        }
-                        else
-                        {
-                            leader.IsExist = false;
-                        }
-                        if (dr[6].ToString().Equals("是"))
-                        {
-                            leader.IsRegulated = true;
-                        }
-                        else
-                        {
-                            leader.IsRegulated = false;
-                        }
-
-                        if (!dr[7].ToString().Equals(""))
-                        {
-                            leader.ExitModel = dr[7].ToString();
-                        }
-                    }
-
-                    if (!dr[9].ToString().Equals(""))
-                    {
-                        if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
-                        {
-                            if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
+                                leader.IsExist = true;
+                            }
+                            else
                             {
-                                if (familyMember.ReportBusinesses == null)
-                                {
-                                    familyMember.ReportBusinesses = new List<ReportBusiness>();
-                                }
-                                familyMember.ReportBusinesses.Add(reportBusiness);
-                                reportBusiness = new ReportBusiness();
+                                leader.IsExist = false;
+                            }
+                            if (dr[6].ToString().Equals("是"))
+                            {
+                                leader.IsRegulated = true;
+                            }
+                            else
+                            {
+                                leader.IsRegulated = false;
                             }
 
-                            if (leader.FamilyMembers == null) {
+                            if (!dr[7].ToString().Equals(""))
+                            {
+                                leader.ExitModel = dr[7].ToString();
+                            }
+
+                            familyMember = new FamilyMember();
+                            familyMember.FullName = leader.FullName;
+                            familyMember.CardNo = leader.CardNo;
+                            familyMember.Relation = "本人";
+                            familyMember.WorkUnit = "本单位";
+
+                            if (leader.FamilyMembers == null)
+                            {
                                 leader.FamilyMembers = new List<FamilyMember>();
                             }
                             leader.FamilyMembers.Add(familyMember);
                             familyMember = new FamilyMember();
                         }
 
-
-                        
-                        familyMember.Relation = dr[8].ToString();
-                        familyMember.FullName = dr[9].ToString();
-                        familyMember.CardNo = dr[10].ToString();
-                        familyMember.WorkUnit = dr[11].ToString();
-                    }
-
-                    if (!dr[13].ToString().Equals(""))
-                    {
-                        if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
+                        if (!dr[9].ToString().Equals(""))
                         {
-                            if (familyMember.ReportBusinesses == null)
+                            if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
                             {
-                                familyMember.ReportBusinesses = new List<ReportBusiness>();
+                                if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
+                                {
+                                    if (familyMember.ReportBusinesses == null)
+                                    {
+                                        familyMember.ReportBusinesses = new List<ReportBusiness>();
+                                    }
+                                    familyMember.ReportBusinesses.Add(reportBusiness);
+                                    reportBusiness = new ReportBusiness();
+                                }
+
+                                if (leader.FamilyMembers == null)
+                                {
+                                    leader.FamilyMembers = new List<FamilyMember>();
+                                }
+                                leader.FamilyMembers.Add(familyMember);
+                                familyMember = new FamilyMember();
                             }
-                            familyMember.ReportBusinesses.Add(reportBusiness);
-                            reportBusiness = new ReportBusiness();
+
+
+
+                            familyMember.Relation = dr[8].ToString();
+                            familyMember.FullName = dr[9].ToString();
+                            familyMember.CardNo = dr[10].ToString();
+                            if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
+                            {
+                                throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错："+ familyMember.FullName + "身份证校验未出错");
+                            }
+                            familyMember.WorkUnit = dr[11].ToString();
                         }
 
-                        
-                        reportBusiness.BusinessType = dr[12].ToString();
-                        reportBusiness.BusinessName = dr[13].ToString();
-                        reportBusiness.RegPlace = dr[14].ToString();
-                        reportBusiness.BusinessPlace = dr[15].ToString();
-                        reportBusiness.BusinessPost = dr[16].ToString();
+                        if (!dr[13].ToString().Equals(""))
+                        {
+                            if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
+                            {
+                                if (familyMember.ReportBusinesses == null)
+                                {
+                                    familyMember.ReportBusinesses = new List<ReportBusiness>();
+                                }
+                                familyMember.ReportBusinesses.Add(reportBusiness);
+                                reportBusiness = new ReportBusiness();
+                            }
 
-                        if (dr[17].ToString().Equals(""))
-                        {
-                            reportBusiness.Subscribe = 0;
-                        }
-                        else
-                        {
-                            reportBusiness.Subscribe=decimal.Parse(dr[17].ToString());
-                        }
-                        if (dr[18].ToString().Equals(""))
-                        {
-                            reportBusiness.PaidinCapital = 0;
-                        }
-                        else
-                        {
-                            reportBusiness.PaidinCapital = decimal.Parse(dr[18].ToString());
-                        }
-                        if (dr[19].ToString().Equals(""))
-                        {
-                            reportBusiness.Proportion = 0;
-                        }
-                        else
-                        {
-                            reportBusiness.Proportion = decimal.Parse(dr[19].ToString());
-                        }
 
-                        if (dr[20].ToString().Equals(""))
-                        {
-                            reportBusiness.EstDate = DateTime.MinValue;
+                            reportBusiness.BusinessType = dr[12].ToString();
+                            reportBusiness.BusinessName = dr[13].ToString();
+                            reportBusiness.RegPlace = dr[14].ToString();
+                            reportBusiness.BusinessPlace = dr[15].ToString();
+                            reportBusiness.BusinessPost = dr[16].ToString();
+
+                            if (dr[17].ToString().Equals(""))
+                            {
+                                reportBusiness.Subscribe = 0;
+                            }
+                            else
+                            {
+                                reportBusiness.Subscribe = decimal.Parse(dr[17].ToString());
+                            }
+                            if (dr[18].ToString().Equals(""))
+                            {
+                                reportBusiness.PaidinCapital = 0;
+                            }
+                            else
+                            {
+                                reportBusiness.PaidinCapital = decimal.Parse(dr[18].ToString());
+                            }
+                            if (dr[19].ToString().Equals(""))
+                            {
+                                reportBusiness.Proportion = 0;
+                            }
+                            else
+                            {
+                                reportBusiness.Proportion = decimal.Parse(dr[19].ToString());
+                            }
+
+                            if (dr[20].ToString().Equals(""))
+                            {
+                                reportBusiness.EstDate = DateTime.MinValue;
+                            }
+                            else
+                            {
+                                reportBusiness.EstDate = DateTime.Parse(dr[20].ToString());
+                            }
+                            reportBusiness.Nearly3Years1 = dr[21].ToString();
+                            reportBusiness.Nearly3Years2 = dr[22].ToString();
+                            reportBusiness.Nearly3Years3 = dr[23].ToString();
+                            if (dr[24].ToString().Equals("是"))
+                            {
+                                reportBusiness.IsRelevant = true;
+                            }
+                            else
+                            {
+                                reportBusiness.IsRelevant = false;
+                            }
                         }
-                        else
-                        {
-                            reportBusiness.EstDate =DateTime.Parse(dr[20].ToString());
-                        }
-                        reportBusiness.Nearly3Years1 = dr[21].ToString();
-                        reportBusiness.Nearly3Years2 = dr[22].ToString();
-                        reportBusiness.Nearly3Years3 = dr[23].ToString();
-                        if (dr[24].ToString().Equals("是"))
-                        {
-                            reportBusiness.IsRelevant = true;
-                        }
-                        else
-                        {
-                            reportBusiness.IsRelevant = false;
-                        }                        
                     }
+
                 }
 
-            }
+                if (!(leader.CardNo == null || leader.CardNo.Length == 0))
+                {
+                    if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
+                    {
+                        if (familyMember.ReportBusinesses == null)
+                        {
+                            familyMember.ReportBusinesses = new List<ReportBusiness>();
+                        }
+                        familyMember.ReportBusinesses.Add(reportBusiness);
+                        reportBusiness = new ReportBusiness();
+                    }
 
-            if (!(leader.CardNo == null || leader.CardNo.Length == 0))
+                    if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
+                    {
+                        if (leader.FamilyMembers == null)
+                        {
+                            leader.FamilyMembers = new List<FamilyMember>();
+                        }
+                        leader.FamilyMembers.Add(familyMember);
+                        familyMember = new FamilyMember();
+                    }
+                    leaders.Add(leader);
+                }
+
+                using (BusinessContext context = new BusinessContext())
+                {
+                    context.Database.EnsureCreated();
+                    context.AddRange(leaders);
+                    context.SaveChanges();
+                }
+            }catch(Exception ex)
             {
-                if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
-                {
-                    if (familyMember.ReportBusinesses == null)
-                    {
-                        familyMember.ReportBusinesses = new List<ReportBusiness>();
-                    }
-                    familyMember.ReportBusinesses.Add(reportBusiness);
-                    reportBusiness = new ReportBusiness();
-                }
-
-                if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
-                {
-                    if (leader.FamilyMembers == null)
-                    {
-                        leader.FamilyMembers = new List<FamilyMember>();
-                    }
-                    leader.FamilyMembers.Add(familyMember);
-                    familyMember = new FamilyMember();
-                }
-                leaders.Add(leader);                
+                MessageBox.Show(ex.Message);
             }
 
-            dataGridView1.DataSource = leaders.ToList();
+            
+            
 
         }
 

@@ -13,8 +13,21 @@ namespace EFCoreDemo
 
         public DbSet<ReportBusiness> ReportBusinesses { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
+        {            
             optionsBuilder.UseSqlite("Data Source=gszz.db");
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Leader>()
+                .Property(b => b.CreateTime)
+                .HasDefaultValueSql("datetime()");
+            modelBuilder.Entity<FamilyMember>()
+                .Property(b => b.CreateTime)
+                .HasDefaultValueSql("datetime()");
+            modelBuilder.Entity<ReportBusiness>()
+                .Property(b => b.CreateTime)
+                .HasDefaultValueSql("datetime()");
         }
     }
 }

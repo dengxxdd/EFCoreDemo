@@ -31,7 +31,7 @@ namespace EFCoreDemo
             {
 
                 IRow row = (IRow)rows.Current;
-
+                
                 if (dt.Columns.Count == 0)
                 {
                     for (int j = 0; j < row.LastCellNum; j++)

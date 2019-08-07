@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace EFCoreDemo
 {
@@ -14,6 +13,7 @@ namespace EFCoreDemo
         public DbSet<Post> Posts { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            this.Database.EnsureCreated();
             optionsBuilder.UseSqlite("Data Source=blogging.db");
         }
     }

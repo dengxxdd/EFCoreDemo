@@ -21,13 +21,13 @@ namespace EFCoreDemo
         {
             modelBuilder.Entity<Leader>()
                 .Property(b => b.CreateTime)
-                .HasDefaultValueSql("datetime()");
+                .HasDefaultValueSql("datetime('now','localtime')");
             modelBuilder.Entity<FamilyMember>()
                 .Property(b => b.CreateTime)
-                .HasDefaultValueSql("datetime()");
+                .HasDefaultValueSql("datetime('now','localtime')");
             modelBuilder.Entity<ReportBusiness>()
                 .Property(b => b.CreateTime)
-                .HasDefaultValueSql("datetime()");
+                .HasDefaultValueSql("datetime('now','localtime')");
         }
     }
 }

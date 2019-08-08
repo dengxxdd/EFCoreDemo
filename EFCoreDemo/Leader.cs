@@ -45,6 +45,14 @@ namespace EFCoreDemo
         /// 退出方式
         /// </summary>
         public string ExitModel { get; set; }
+        /// <summary>
+        /// 是否比对
+        /// </summary>
+        public bool IsCompare { get; set; }
+        /// <summary>
+        /// 是否一致
+        /// </summary>
+        public bool IsMatch { get; set; }
 
         public DateTime CreateTime { get; set; }
 

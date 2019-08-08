@@ -70,6 +70,10 @@ namespace EFCoreDemo
         /// 备注
         /// </summary>
         public string Remarks { get; set; }
+        /// <summary>
+        /// 是否匹配
+        /// </summary>
+        public string IsMatch { get; set; }
 
         public FamilyMember FamilyMember { get; set; }
         public DateTime CreateTime { get; set; }

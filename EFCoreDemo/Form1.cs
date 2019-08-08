@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace EFCoreDemo
 {
@@ -45,101 +46,20 @@ namespace EFCoreDemo
             }
         }
 
-        private void Button3_Click(object sender, EventArgs e)
+        private List<Leader> getCollectInfo(string fileName)
         {
             XlsToDb xlsToDb = new XlsToDb();
-            DataTable dt = xlsToDb.ConvertToDataTable("经商办企业情况汇总表.xlsx");
+            DataTable dt = xlsToDb.ConvertToDataTable(fileName);
             DataTable dt2 = new DataTable();
             dt2 = dt.Clone();
-            Leader leader = new Leader();            
+            Leader leader = new Leader();
             List<Leader> leaders = new List<Leader>();
             FamilyMember familyMember = new FamilyMember();
             ReportBusiness reportBusiness = new ReportBusiness();
 
-            #region 注释掉的代码
-            //leader.OrderId = 1;
-            //leader.FullName = "张三";
-            //leader.CardNo = "431111197602040000";
-            //leader.Post = "书记";
-            //leader.Rank = "正处";
-            //leader.IsExist = true;
-            //leader.IsRegulated = false;
-            //leader.FamilyMembers = new List<FamilyMember>();
-
-
-            //familyMember.ReportBusinesses = new List<ReportBusiness>();
-            //familyMember.Relation = "配偶";
-            //familyMember.FullName = "李四";
-            //familyMember.CardNo = "431111197803050021";
-            //familyMember.WorkUnit = "教育"; 
-            //leader.FamilyMembers.Add(familyMember);
-
-            //reportBusiness = new ReportBusiness();
-            //reportBusiness.BusinessType = "A1";
-            //reportBusiness.BusinessName = "有限公司";
-            //reportBusiness.BusinessPost = "执行董事";
-            //reportBusiness.RegPlace = "长沙";
-            //reportBusiness.BusinessPlace = "长沙";
-            //reportBusiness.Subscribe = 200;
-            //reportBusiness.PaidinCapital = 20;
-            //reportBusiness.Proportion = 50;
-            //reportBusiness.EstDate = DateTime.Parse("2017-08-02");
-            //reportBusiness.Nearly3Years1 = "百货、餐饮";
-            //reportBusiness.Nearly3Years2 = "XX公司";
-            //reportBusiness.Nearly3Years3 = "";
-            //reportBusiness.IsRelevant = false;
-            //familyMember.ReportBusinesses.Add(reportBusiness);
-
-            //reportBusiness = new ReportBusiness();
-            //reportBusiness.BusinessType = "A2";
-            //reportBusiness.BusinessName = "股份公司";
-            //reportBusiness.BusinessPost = "股东";
-            //reportBusiness.RegPlace = "广州";
-            //reportBusiness.BusinessPlace = "广州";
-            //reportBusiness.Subscribe = 100;
-            //reportBusiness.PaidinCapital = 10;
-            //reportBusiness.Proportion = 30;
-            //reportBusiness.EstDate = DateTime.Parse("2013-02-02");
-            //reportBusiness.Nearly3Years1 = "住宿、娱乐";
-            //reportBusiness.Nearly3Years2 = "YY公司";
-            //reportBusiness.Nearly3Years3 = "";
-            //reportBusiness.IsRelevant = false;
-            //familyMember.ReportBusinesses.Add(reportBusiness);
-
-
-            //familyMember = new FamilyMember();
-            //familyMember.Relation = "儿子";
-            //familyMember.FullName = "张四";
-            //familyMember.CardNo = "431111200201030019";
-            //familyMember.WorkUnit = "城管";
-            //leader.FamilyMembers.Add(familyMember);
-            //familyMember = new FamilyMember();
-            //familyMember.Relation = "儿媳";
-            //familyMember.FullName = "李五";
-            //familyMember.CardNo = "431111200508090020";
-            //familyMember.WorkUnit = "文化";
-
-
-
-
-            //leader.FamilyMembers.Add(familyMember);
-
-            //leaders.Add(leader);
-
-            //using (BusinessContext context = new BusinessContext())
-            //{
-            //    context.Database.EnsureCreated();
-            //    //context.Database.EnsureCreated();
-            //    context.AddRange(leader);
-            //    context.SaveChanges();
-            //}
-
-            //dataGridView1.DataSource = leaders;
-            #endregion
-
             try
             {
-                for (int i = 4; i < dt.Rows.Count; i++)
+                for (int i = 3; i < dt.Rows.Count; i++)
                 {
                     DataRow dr = dt.Rows[i];//9  13
 
@@ -178,10 +98,10 @@ namespace EFCoreDemo
                             leader.FullName = dr[1].ToString();
                             leader.CardNo = dr[2].ToString();
 
-                            if (!IDCardValidation.CheckIDCard(leader.CardNo))
-                            {
-                                throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错：" + leader.FullName + "身份证校验未出错");
-                            }
+                            //if (!IDCardValidation.CheckIDCard(leader.CardNo))
+                            //{
+                            //    throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错：" + leader.FullName + "身份证校验未出错");
+                            //}
 
                             leader.Post = dr[3].ToString();
                             leader.Rank = dr[4].ToString();
@@ -248,10 +168,10 @@ namespace EFCoreDemo
                             familyMember.Relation = dr[8].ToString();
                             familyMember.FullName = dr[9].ToString();
                             familyMember.CardNo = dr[10].ToString();
-                            if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
-                            {
-                                throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错："+ familyMember.FullName + "身份证校验未出错");
-                            }
+                            //if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
+                            //{
+                            //    throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错："+ familyMember.FullName + "身份证校验未出错");
+                            //}
                             familyMember.WorkUnit = dr[11].ToString();
                         }
 
@@ -320,7 +240,6 @@ namespace EFCoreDemo
                             }
                         }
                     }
-
                 }
 
                 if (!(leader.CardNo == null || leader.CardNo.Length == 0))
@@ -347,28 +266,47 @@ namespace EFCoreDemo
                     leaders.Add(leader);
                 }
 
+                return leaders;
+
+                //using (BusinessContext context = new BusinessContext())
+                //{
+                //    context.Database.EnsureCreated();
+                //    context.AddRange(leaders);
+                //    context.SaveChanges();
+                //}
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+
+            return null;
+        }
+
+        private void Button3_Click(object sender, EventArgs e)
+        {                  
+            string targetDir = Directory.GetCurrentDirectory() + "\\导入目录\\待分拣";
+            
+            List<FileInfo> fileInformations= DirectoryAllFiles.GetAllFiles(targetDir);
+            foreach(FileInfo fi in fileInformations)
+            {
+                List<Leader> leaders = getCollectInfo(fi.FullName);
                 using (BusinessContext context = new BusinessContext())
                 {
                     context.Database.EnsureCreated();
                     context.AddRange(leaders);
                     context.SaveChanges();
                 }
-            }catch(Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-
-            
-            
-
+            }            
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
             using (BusinessContext context = new BusinessContext())
             {
-                
-                //多级联合查询
+
+                #region 多级联合查询:所有经商办企业联合查询
                 var data = from a in context.Leaders
                            join b in context.FamilyMembers
                            on a.Id equals b.LeaderId into dc
@@ -389,7 +327,25 @@ namespace EFCoreDemo
                                eci.BusinessName,
                                eci.BusinessType
                            };
-                dataGridView1.DataSource = data.ToList();
+                #endregion
+
+
+                var data2 = from a in context.Leaders
+                           join b in context.FamilyMembers
+                           on a.Id equals b.LeaderId into dc
+                           from dci in dc.DefaultIfEmpty()
+                           select new
+                           {
+                               LeaderId = a.Id,
+                               LeaderFullName = a.FullName,
+                               LeaderCardNo = a.CardNo,
+                               FamilyId = dci.Id.ToString(),
+                               dci.Relation,
+                               FamilyFullName = dci.FullName,
+                               FamilyCardNo = dci.CardNo                               
+                           };
+
+                dataGridView1.DataSource = data2.ToList();
             }
         }
 

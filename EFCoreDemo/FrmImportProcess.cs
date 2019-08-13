@@ -1,46 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.ComponentModel;
 using System.Data;
-using NPOI.HSSF.UserModel;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
-using System.Threading;
+using System.ComponentModel;
 
 namespace EFCoreDemo
 {
-           
-    public partial class Form1 : Form
+    public partial class FrmImportProcess : Form
     {        
 
-        
-
-        public Form1()
+        public FrmImportProcess()
         {
-            InitializeComponent();            
+            InitializeComponent();
+            backgroundWorker1.WorkerReportsProgress = true;
+            backgroundWorker1.WorkerSupportsCancellation = true;
         }
 
-        private void Button1_Click(object sender, EventArgs e)
-        {
-            //显示进度窗体
-            FrmImportProcess frm = new FrmImportProcess();
-            frm.StartPosition = FormStartPosition.CenterScreen;
-            frm.ShowDialog(this);
-        }
- 
 
-        private void Button2_Click(object sender, EventArgs e)
-        {
-            
-        }
 
         private WorkUnit getCollectInfo(string fileName)
         {
@@ -69,15 +48,19 @@ namespace EFCoreDemo
 
                     if (!(dr[0].ToString().Equals("") && dr[9].ToString().Equals("") && dr[13].ToString().Equals("")))
                     {
+                        if (dr[1].ToString().Equals("姓名"))
+                        {
+                            continue;
+                        }
 
                         //如果表格第1列不为空，说明有领导干部信息
                         if (!dr[0].ToString().Equals(""))
-                        {
+                        {                            
                             if (dr[0].ToString().IndexOf("填报人") > -1)
                             {
                                 workUnit.Filler = dr[2].ToString();
                                 workUnit.Telephone = dr[18].ToString();
-                            }
+                            }                            
                             else
                             {
                                 if (!(leader.CardNo == null || leader.CardNo.Length == 0))
@@ -108,11 +91,12 @@ namespace EFCoreDemo
                                 leader.OrderId = int.Parse(dr[0].ToString());
                                 leader.FullName = dr[1].ToString();
                                 leader.CardNo = dr[2].ToString();
+                                backgroundWorker1.ReportProgress(0, "正在导入领导干部" + leader.FullName + "信息。\r\n\r\n");
 
-                                //if (!IDCardValidation.CheckIDCard(leader.CardNo))
-                                //{
-                                //    throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错：" + leader.FullName + "身份证校验未出错");
-                                //}
+                                if (!IDCardValidation.CheckIDCard(leader.CardNo))
+                                {
+                                    backgroundWorker1.ReportProgress(0, leader.FullName + "身份证号码未通过验证。\r\n\r\n");
+                                }
 
                                 leader.Post = dr[3].ToString();
                                 leader.Rank = dr[4].ToString();
@@ -180,10 +164,10 @@ namespace EFCoreDemo
                             familyMember.Relation = dr[8].ToString();
                             familyMember.FullName = dr[9].ToString();
                             familyMember.CardNo = dr[10].ToString();
-                            //if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
-                            //{
-                            //    throw new Exception("导入'经商办企业情况汇总表.xlsx'时出错："+ familyMember.FullName + "身份证校验未出错");
-                            //}
+                            if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
+                            {
+                                backgroundWorker1.ReportProgress(0, familyMember.FullName + "身份证号码未通过验证。\r\n\r\n");
+                            }
                             familyMember.WorkUnit = dr[11].ToString();
                         }
 
@@ -281,13 +265,7 @@ namespace EFCoreDemo
                 workUnit.Leaders = leaders;
 
                 return workUnit;
-
-                //using (BusinessContext context = new BusinessContext())
-                //{
-                //    context.Database.EnsureCreated();
-                //    context.AddRange(leaders);
-                //    context.SaveChanges();
-                //}
+               
             }
             catch (Exception ex)
             {
@@ -298,219 +276,61 @@ namespace EFCoreDemo
             return null;
         }
 
-        private void Button3_Click(object sender, EventArgs e)
+        private void FrmImportProcess_Load(object sender, EventArgs e)
         {
-            string targetDir = Directory.GetCurrentDirectory() + "\\导入目录\\待分拣";
+            if (backgroundWorker1.IsBusy != true)
+            {
+                // Start the asynchronous operation.
+                backgroundWorker1.RunWorkerAsync();
+            }
+        }
 
+        private void BackgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+            string targetDir = Directory.GetCurrentDirectory() + "\\导入目录\\待分拣";
+            string moveDir = Directory.GetCurrentDirectory() + "\\导入目录\\已分拣\\";
             List<FileInfo> fileInformations = DirectoryAllFiles.GetAllFiles(targetDir);
+            worker.ReportProgress(0, "共找到" + fileInformations.Count.ToString() + "个文件\r\n\r\n");
             foreach (FileInfo fi in fileInformations)
             {
+                worker.ReportProgress(0, "正在导入" + fi.Name + "文件。\r\n\r\n");
                 WorkUnit workUnit = getCollectInfo(fi.FullName);
                 if (workUnit != null)
                 {
                     using (BusinessContext context = new BusinessContext())
                     {
-                        //var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Single(b => b.UnitName == workUnit.UnitName);
-                        //if (dworkUnit != null)
-                        //{
-                        //    List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
-                        //    context.Leaders.RemoveRange(leaders);
-                        //    context.WorkUnits.Remove(dworkUnit);
-                        //    context.SaveChanges();
-                        //}
-                        context.Database.EnsureCreated();
+                        var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Single(b => b.UnitName == workUnit.UnitName);
+                        if (dworkUnit != null)
+                        {
+                            List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
+                            context.Leaders.RemoveRange(leaders);
+                            context.WorkUnits.Remove(dworkUnit);
+                            context.SaveChanges();
+                        }
+                        //context.Database.EnsureCreated();
                         context.AddRange(workUnit);
                         context.SaveChanges();
                     }
-                }
-
-            }
-        }
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            using (BusinessContext context = new BusinessContext())
-            {
-
-                #region 多级联合查询:所有经商办企业联合查询
-                var data = from a in context.Leaders
-                           join b in context.FamilyMembers
-                           on a.Id equals b.LeaderId into dc
-                           from dci in dc.DefaultIfEmpty()
-                           join c in context.ReportBusinesses
-                           on dci.Id equals c.FamilyMemberId into ec
-                           from eci in ec.DefaultIfEmpty()
-                           select new
-                           {
-                               LeaderId = a.Id,
-                               LeaderFullName = a.FullName,
-                               LeaderCardNo = a.CardNo,
-                               FamilyId = dci.Id.ToString(),
-                               dci.Relation,
-                               FamilyFullName = dci.FullName,
-                               FamilyCardNo = dci.CardNo,
-                               BusinessId = eci.Id.ToString(),
-                               eci.BusinessName,
-                               eci.BusinessType
-                           };
-                
-
-
-                var data2 = from a in context.Leaders
-                            join b in context.FamilyMembers
-                            on a.Id equals b.LeaderId into dc
-                            from dci in dc.DefaultIfEmpty()
-                            select new
-                            {
-                                LeaderId = a.Id,
-                                LeaderFullName = a.FullName,
-                                LeaderCardNo = a.CardNo,
-                                FamilyId = dci.Id.ToString(),
-                                dci.Relation,
-                                FamilyFullName = dci.FullName,
-                                FamilyCardNo = dci.CardNo
-                            };
-
-                var data3 = from a in context.WorkUnits
-                            join b in context.Leaders
-                            on a.Id equals b.WorkUnitId
-                            join c in context.FamilyMembers
-                            on b.Id equals c.LeaderId
-                            where (a.IsEntrust == false)
-                            select new
-                            {
-                                LeaderId = c.LeaderId,
-                                FullName = c.FullName,
-                                CardNo = c.CardNo,
-                                ReportDate = DateTime.Now
-                           };
-
-                #endregion
-
-                var workUnits = context.WorkUnits.Include(a=>a.Leaders).ThenInclude(b=>b.FamilyMembers).Where(a => a.IsEntrust == false).ToList();
-                List<FamilyMember> familyMembers = new List<FamilyMember>();
-                foreach(WorkUnit workUnit in workUnits)
-                {
-                    foreach(Leader leader in workUnit.Leaders)
+                    if (File.Exists(moveDir + fi.Name))
                     {
-                        familyMembers.AddRange(leader.FamilyMembers);
+                        File.Delete(moveDir + fi.Name);
                     }
-                    workUnit.IsEntrust = true;
-                }
-                CollectToFile( familyMembers);
-                context.UpdateRange(workUnits);
-                context.SaveChanges();
-            }
-        }
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            decimal a = Convert.ToDecimal("10");
-            int b = 0;
-            //    var q = from c in categories
-            //join p in products on c equals p.Category into ps
-            //from p in ps.DefaultIfEmpty()
-            //select new { Category = c, ProductName = p == null ? "(No products)" : p.ProductName };
-        }
-
-        public int[] NPOI_CellChange(string A1)
-        {
-            int[] nCell = new int[2];
-            string strSplit1, strSplit2;
-            //string A2 = A1.Substring(7, 3);
-            strSplit1 = Regex.Replace(A1, "[0-9]", "", RegexOptions.IgnoreCase);
-            strSplit2 = Regex.Replace(A1, "[a-z]", "", RegexOptions.IgnoreCase);
-            char[] A3 = strSplit1.ToCharArray();
-            nCell[0] = int.Parse(strSplit2) - 1;
-
-            int n = 0;
-            for (int i = 0; i < A3.Length; i++)
-            {
-                n += (A3[i] - 'A' + 1) * Convert.ToInt32((System.Math.Pow(26, Convert.ToDouble(A3.Length - i - 1))));
-            }
-            nCell[1] = n - 1;
-            return nCell;
-        }        
-
-        //将比对结果添加到汇总表         
-        public string CollectToFile( List<FamilyMember> familyMembers)
-        {
-            int rowIndex = 0;   //excel新建行的行号
-            IWorkbook workbook;
-            IRow row;
-            ICell cell;
-            ICellStyle style, style2;
-            //HSSFCellStyle celStyle = getCellStyle();
-
-            try
-            {
-                using (FileStream file = new FileStream(System.Environment.CurrentDirectory + "\\Templates\\工商查询模板.xlsx", FileMode.Open, FileAccess.Read))
-                {
-                    workbook = WorkbookFactory.Create(file);
-                }
-
-                if (workbook is HSSFWorkbook)
-                {
-                    style = ((HSSFWorkbook)workbook).CreateCellStyle();
-                    style2 = ((HSSFWorkbook)workbook).CreateCellStyle();
+                    worker.ReportProgress(0, "导入完成，移动" + fi.Name + "文件至分拣目录。\r\n\r\n");
+                    fi.MoveTo(moveDir + fi.Name);                    
                 }
                 else
                 {
-                    style = ((XSSFWorkbook)workbook).CreateCellStyle();
-                    style2 = ((XSSFWorkbook)workbook).CreateCellStyle();
+                    worker.ReportProgress(0, "导入" + fi.Name + "失败，请检查文件内容。\r\n\r\n");
                 }
-
-                style.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                style.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                style.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                style.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
-                style.BottomBorderColor = 128;
-                style.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                style.VerticalAlignment = VerticalAlignment.Center;
-                style.WrapText = true;
-                style2.CloneStyleFrom(style);
-                style2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Left;
-                ISheet sheet = workbook.GetSheetAt(0); 
-
-                for (int i = 0; i < familyMembers.Count; i++)
-                {
-                    rowIndex = 3 + i;
-                    row = sheet.CreateRow(rowIndex);
-                    for (int j = 0; j < 4; j++)
-                    {
-                        cell = row.CreateCell(j);
-                        cell.CellStyle = style;
-                    }
-
-                    cell = sheet.GetRow(rowIndex).GetCell(0);
-                    cell.SetCellValue(i + 1);
-
-                    cell = sheet.GetRow(rowIndex).GetCell(1);
-                    cell.SetCellValue(familyMembers[i].FullName);
-                    cell = sheet.GetRow(rowIndex).GetCell(2);
-                    cell.SetCellValue(familyMembers[i].CardNo);
-                    cell = sheet.GetRow(rowIndex).GetCell(3);
-                    cell.SetCellValue(DateTime.Now.ToString("yyyyMMdd"));
-                }
-
-                string targetDir = Directory.GetCurrentDirectory() + "\\委托查询\\" + DateTime.Now.ToString("yyyyMMdd") + "工商查询.xlsx";
-                if (File.Exists(targetDir))
-                {
-                    File.Delete(targetDir);
-                }
-                using (FileStream fileStream = File.Open(targetDir, FileMode.Create, FileAccess.Write))
-                {
-                    workbook.Write(fileStream);
-                    fileStream.Close();
-                }
-                workbook.Close();
-                return "OK";
             }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
+           worker.ReportProgress(0, "导入完成，请关闭窗口\r\n");
         }
 
+        private void BackgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            textBox1.Text += e.UserState.ToString();
+        }
     }
+    
 }

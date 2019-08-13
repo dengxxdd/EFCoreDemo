@@ -8,6 +8,7 @@ namespace EFCoreDemo
 {
     public class BusinessContext : DbContext
     {
+        public DbSet<WorkUnit> WorkUnits { get; set; }
         public DbSet<Leader> Leaders { get; set; }
         public DbSet<FamilyMember> FamilyMembers { get; set; }
 
@@ -19,6 +20,9 @@ namespace EFCoreDemo
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<WorkUnit>()
+                .Property(b => b.CreateTime)
+                .HasDefaultValueSql("datetime('now','localtime')");
             modelBuilder.Entity<Leader>()
                 .Property(b => b.CreateTime)
                 .HasDefaultValueSql("datetime('now','localtime')");

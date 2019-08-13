@@ -35,5 +35,7 @@ namespace EFCoreDemo
         public bool IsFeedback { get; set; }
 
         public DateTime CreateTime { get; set; }
+
+        public List<Leader> Leaders { get; set; }
     }
 }

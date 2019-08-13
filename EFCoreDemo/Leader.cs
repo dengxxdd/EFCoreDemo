@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+
 
 namespace EFCoreDemo
 {
@@ -13,6 +10,8 @@ namespace EFCoreDemo
         /// 自增ID
         /// </summary>
         public int Id { get; set; }
+
+        public int WorkUnitId { get; set; }
         /// <summary>
         /// 序号
         /// </summary>
@@ -55,6 +54,8 @@ namespace EFCoreDemo
         public bool IsMatch { get; set; }
 
         public DateTime CreateTime { get; set; }
+
+        public WorkUnit WorkUnit { get; set; }
 
         public List<FamilyMember> FamilyMembers {get;set;}
 

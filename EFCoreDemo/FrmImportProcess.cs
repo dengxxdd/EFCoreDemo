@@ -308,7 +308,7 @@ namespace EFCoreDemo
                             context.WorkUnits.Remove(dworkUnit);
                             context.SaveChanges();
                         }
-                        //context.Database.EnsureCreated();
+                        //context.Database.EnsureCreated();ff
                         context.AddRange(workUnit);
                         context.SaveChanges();
                     }

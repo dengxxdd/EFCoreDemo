@@ -34,14 +34,13 @@ namespace EFCoreDemo
             WorkUnit workUnit = new WorkUnit();
             try
             {
-                workUnit.UnitName = dt.Rows[1][2].ToString();
+                workUnit.UnitName = dt.Rows[1][3].ToString();
 
                 if (workUnit.UnitName.Equals(""))
                 {
                     throw new Exception("填报单位不能为空！");
                 }
-
-                workUnit.FillDate = DateTime.Parse(dt.Rows[1][21].ToString());
+                
                 for (int i = 3; i < dt.Rows.Count; i++)
                 {
                     DataRow dr = dt.Rows[i];//9  13
@@ -55,11 +54,12 @@ namespace EFCoreDemo
 
                         //如果表格第1列不为空，说明有领导干部信息
                         if (!dr[0].ToString().Equals(""))
-                        {                            
+                        {
                             if (dr[0].ToString().IndexOf("填报人") > -1)
                             {
-                                workUnit.Filler = dr[2].ToString();
-                                workUnit.Telephone = dr[18].ToString();
+                                workUnit.Filler = dr[3].ToString();
+                                workUnit.Telephone = dr[15].ToString();
+                                workUnit.FillDate = DateTime.Parse(dr[22].ToString());
                             }                            
                             else
                             {
@@ -91,12 +91,7 @@ namespace EFCoreDemo
                                 leader.OrderId = int.Parse(dr[0].ToString());
                                 leader.FullName = dr[1].ToString();
                                 leader.CardNo = dr[2].ToString();
-                                backgroundWorker1.ReportProgress(0, "正在导入领导干部" + leader.FullName + "信息。\r\n\r\n");
-
-                                if (!IDCardValidation.CheckIDCard(leader.CardNo))
-                                {
-                                    backgroundWorker1.ReportProgress(0, leader.FullName + "身份证号码未通过验证。\r\n\r\n");
-                                }
+                                backgroundWorker1.ReportProgress(0, "正在导入领导干部" + leader.FullName + "信息。\r\n\r\n");                                
 
                                 leader.Post = dr[3].ToString();
                                 leader.Rank = dr[4].ToString();
@@ -127,6 +122,12 @@ namespace EFCoreDemo
                                 familyMember.CardNo = leader.CardNo;
                                 familyMember.Relation = "本人";
                                 familyMember.WorkUnit = "本单位";
+                                familyMember.IsValid = true;
+                                if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
+                                {
+                                    backgroundWorker1.ReportProgress(0, familyMember.FullName + "身份证号码未通过验证。\r\n\r\n");
+                                    familyMember.IsValid = false;
+                                }
 
                                 if (leader.FamilyMembers == null)
                                 {
@@ -164,9 +165,11 @@ namespace EFCoreDemo
                             familyMember.Relation = dr[8].ToString();
                             familyMember.FullName = dr[9].ToString();
                             familyMember.CardNo = dr[10].ToString();
+                            familyMember.IsValid = true;
                             if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
                             {
                                 backgroundWorker1.ReportProgress(0, familyMember.FullName + "身份证号码未通过验证。\r\n\r\n");
+                                familyMember.IsValid = false;
                             }
                             familyMember.WorkUnit = dr[11].ToString();
                         }
@@ -300,15 +303,17 @@ namespace EFCoreDemo
                 {
                     using (BusinessContext context = new BusinessContext())
                     {
-                        var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Single(b => b.UnitName == workUnit.UnitName);
-                        if (dworkUnit != null)
+                        var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Where(c => c.UnitName == workUnit.UnitName);
+                        if (dworkUnit.Count() > 0)
                         {
-                            List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
-                            context.Leaders.RemoveRange(leaders);
-                            context.WorkUnits.Remove(dworkUnit);
+                            WorkUnit work = dworkUnit.First();
+
+                            //List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
+                            //context.Leaders.RemoveRange(leaders);
+                            context.WorkUnits.Remove(work);
                             context.SaveChanges();
                         }
-                        //context.Database.EnsureCreated();ff
+                        //context.Database.EnsureCreated();
                         context.AddRange(workUnit);
                         context.SaveChanges();
                     }

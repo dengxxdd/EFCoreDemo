@@ -38,7 +38,7 @@ namespace EFCoreDemo
         /// <summary>
         /// 身份证号是否通过核验
         /// </summary>
-        public string IsValid { get; set; }
+        public bool IsValid { get; set; }
         public DateTime CreateTime { get; set; }
 
         public Leader Leader { get; set; }

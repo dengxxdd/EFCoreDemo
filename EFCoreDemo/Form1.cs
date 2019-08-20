@@ -233,7 +233,7 @@ namespace EFCoreDemo
                 {
                     foreach (Leader leader in workUnit.Leaders)
                     {
-                        familyMembers.AddRange(leader.FamilyMembers);
+                        familyMembers.AddRange(leader.FamilyMembers.OrderBy(b=>b.OrderId));
                     }
                     workUnit.IsEntrust = true;
                 }
@@ -260,6 +260,16 @@ namespace EFCoreDemo
                 var data = context.Leaders.Where(b => b.WorkUnitId == workUnits[0].Id).ToList();
                 dataGridView1.DataSource = data;
             }
+        }
+
+        private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            using (BusinessContext context = new BusinessContext())
+            {
+                var data = context.Leaders.Where(b => b.WorkUnit.UnitName == listBox1.SelectedValue.ToString()).ToList();
+                dataGridView1.DataSource = data;
+            }
+                
         }
     }
 }

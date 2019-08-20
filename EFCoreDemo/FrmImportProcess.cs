@@ -32,6 +32,7 @@ namespace EFCoreDemo
             FamilyMember familyMember = new FamilyMember();
             ReportBusiness reportBusiness = new ReportBusiness();
             WorkUnit workUnit = new WorkUnit();
+            int orderId = 1;
             try
             {
                 workUnit.UnitName = dt.Rows[1][3].ToString();
@@ -60,7 +61,8 @@ namespace EFCoreDemo
                                 workUnit.Filler = dr[3].ToString();
                                 workUnit.Telephone = dr[15].ToString();
                                 workUnit.FillDate = DateTime.Parse(dr[22].ToString());
-                            }                            
+                                break;
+                            }
                             else
                             {
                                 if (!(leader.CardNo == null || leader.CardNo.Length == 0))
@@ -95,7 +97,7 @@ namespace EFCoreDemo
 
                                 leader.Post = dr[3].ToString();
                                 leader.Rank = dr[4].ToString();
-                                if (dr[5].ToString().Equals("是"))
+                                if (dr[5].ToString().Equals("存在"))
                                 {
                                     leader.IsExist = true;
                                 }
@@ -118,6 +120,10 @@ namespace EFCoreDemo
                                 }
 
                                 familyMember = new FamilyMember();
+                                orderId=1;
+                                familyMember.OrderId = orderId;
+                                orderId++;
+
                                 familyMember.FullName = leader.FullName;
                                 familyMember.CardNo = leader.CardNo;
                                 familyMember.Relation = "本人";
@@ -161,7 +167,8 @@ namespace EFCoreDemo
                             }
 
 
-
+                            familyMember.OrderId = orderId;
+                            orderId++;
                             familyMember.Relation = dr[8].ToString();
                             familyMember.FullName = dr[9].ToString();
                             familyMember.CardNo = dr[10].ToString();
@@ -272,7 +279,7 @@ namespace EFCoreDemo
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                backgroundWorker1.ReportProgress(0, "出错：" + ex.Message+"\r\n\r\n");
                 return null;
             }
 
@@ -304,17 +311,17 @@ namespace EFCoreDemo
                     using (BusinessContext context = new BusinessContext())
                     {
                         var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Where(c => c.UnitName == workUnit.UnitName);
-                        if (dworkUnit.Count() > 0)
-                        {
-                            WorkUnit work = dworkUnit.First();
+                        //if (dworkUnit.Count() > 0)
+                        //{
+                        //    WorkUnit work = dworkUnit.First();
 
-                            //List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
-                            //context.Leaders.RemoveRange(leaders);
-                            context.WorkUnits.Remove(work);
-                            context.SaveChanges();
-                        }
-                        //context.Database.EnsureCreated();
-                        context.AddRange(workUnit);
+                        //    //List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
+                        //    //context.Leaders.RemoveRange(leaders);
+                        //    context.WorkUnits.Remove(work);
+                        //    context.SaveChanges();
+                        //}
+                        context.Database.EnsureCreated();
+                        context.Add(workUnit);
                         context.SaveChanges();
                     }
                     if (File.Exists(moveDir + fi.Name))

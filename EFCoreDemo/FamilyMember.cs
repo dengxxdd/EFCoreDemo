@@ -20,6 +20,11 @@ namespace EFCoreDemo
         public int LeaderId { get; set; }
 
         /// <summary>
+        /// 序号
+        /// </summary>
+        public int OrderId { get; set; }
+
+        /// <summary>
         /// 关系
         /// </summary>
         public string Relation { get; set; }

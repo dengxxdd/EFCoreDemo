@@ -34,7 +34,7 @@ namespace EFCoreDemo
                 
                 if (dt.Columns.Count == 0)
                 {
-                    for (int j = 0; j < row.LastCellNum; j++)
+                    for (int j = 0; j < 26; j++)
                     {
                         dt.Columns.Add(Convert.ToChar(((int)'A') + j).ToString());
                     }
@@ -42,7 +42,7 @@ namespace EFCoreDemo
 
                 DataRow dr = dt.NewRow();
 
-                for (int i = 0; i < row.LastCellNum; i++)
+                for (int i = 0; i <26; i++)
                 {
                     ICell cell = (ICell)row.GetCell(i);
                     if (cell == null)

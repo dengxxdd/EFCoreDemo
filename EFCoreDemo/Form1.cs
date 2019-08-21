@@ -232,6 +232,7 @@ namespace EFCoreDemo
                 List<FamilyMember> familyMembers = new List<FamilyMember>();
                 foreach (WorkUnit workUnit in workUnits)
                 {
+                    var leaders = workUnit.Leaders.OrderBy(b => b.OrderId);
                     foreach (Leader leader in workUnit.Leaders)
                     {
                         familyMembers.AddRange(leader.FamilyMembers.OrderBy(b=>b.OrderId));

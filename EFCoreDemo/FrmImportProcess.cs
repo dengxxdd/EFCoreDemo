@@ -48,7 +48,7 @@ namespace EFCoreDemo
 
                     if (!(dr[0].ToString().Equals("") && dr[9].ToString().Equals("") && dr[13].ToString().Equals("")))
                     {
-                        if (dr[1].ToString().Equals("姓名"))
+                        if (dr[1].ToString().Replace(" ","").Equals("姓名"))
                         {
                             continue;
                         }
@@ -91,7 +91,7 @@ namespace EFCoreDemo
                                     leader = new Leader();
                                 }
                                 leader.OrderId = int.Parse(dr[0].ToString());
-                                leader.FullName = dr[1].ToString();
+                                leader.FullName = dr[1].ToString().Replace(" ","").Replace("　","");
                                 leader.CardNo = dr[2].ToString();
                                 backgroundWorker1.ReportProgress(0, "正在导入领导干部" + leader.FullName + "信息。\r\n\r\n");                                
 
@@ -311,16 +311,16 @@ namespace EFCoreDemo
                     using (BusinessContext context = new BusinessContext())
                     {
                         var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Where(c => c.UnitName == workUnit.UnitName);
-                        //if (dworkUnit.Count() > 0)
-                        //{
-                        //    WorkUnit work = dworkUnit.First();
+                        if (dworkUnit.Count() > 0)
+                        {
+                            WorkUnit work = dworkUnit.First();
 
-                        //    //List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
-                        //    //context.Leaders.RemoveRange(leaders);
-                        //    context.WorkUnits.Remove(work);
-                        //    context.SaveChanges();
-                        //}
-                        context.Database.EnsureCreated();
+                            //List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
+                            //context.Leaders.RemoveRange(leaders);
+                            context.WorkUnits.Remove(work);
+                            context.SaveChanges();
+                        }
+                        //context.Database.EnsureCreated();
                         context.Add(workUnit);
                         context.SaveChanges();
                     }
@@ -328,8 +328,17 @@ namespace EFCoreDemo
                     {
                         File.Delete(moveDir + fi.Name);
                     }
-                    worker.ReportProgress(0, "导入完成，移动" + fi.Name + "文件至分拣目录。\r\n\r\n");
-                    fi.MoveTo(moveDir + fi.Name);                    
+
+                    int familyCount = 0;
+                    foreach(Leader leader in workUnit.Leaders)
+                    {
+                        familyCount += leader.FamilyMembers.Count;
+                    }
+
+                    worker.ReportProgress(0, "导入完成，" + workUnit.UnitName + "共导入" + workUnit.Leaders.Count + "位领导干部信息、" +
+                        familyCount + "位家庭成员信息（含领导本人）；\r\n\r\n");
+                    fi.MoveTo(moveDir + fi.Name);
+                    worker.ReportProgress(0, "移动"+fi.Name+"文件至已分拣目录");
                 }
                 else
                 {

@@ -117,8 +117,9 @@ namespace EFCoreDemo
                 style.WrapText = true;
                 style2.CloneStyleFrom(style);
                 style2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Left;
-                ISheet sheet = workbook.GetSheetAt(0); 
-
+                ISheet sheet = workbook.GetSheetAt(0);
+                cell = sheet.GetRow(1).GetCell(3);
+                cell.SetCellValue(DateTime.Now.ToString("yyyyMMdd"));
                 for (int i = 0; i < familyMembers.Count; i++)
                 {
                     rowIndex = 3 + i;
@@ -250,15 +251,21 @@ namespace EFCoreDemo
             using (BusinessContext context = new BusinessContext())
             {
                 var workUnits = context.WorkUnits.ToList();
-                AutoCompleteStringCollection ac = new AutoCompleteStringCollection(); 
-                for (int i = 0; i < workUnits.Count; i++)
+                
+                if (workUnits != null)
                 {
-                    ac.Add(workUnits[i].UnitName);
-                }
-                this.listBox1.DataSource = ac;
-                this.textBox1.AutoCompleteCustomSource = ac;//设置该文本框的自动完成数据源
-                var data = context.Leaders.Where(b => b.WorkUnitId == workUnits[0].Id).ToList();
-                dataGridView1.DataSource = data;
+                    AutoCompleteStringCollection ac = new AutoCompleteStringCollection();
+
+                    for (int i = 0; i < workUnits.Count; i++)
+                    {
+                        ac.Add(workUnits[i].UnitName);
+                    }
+                    this.listBox1.DataSource = ac;
+                    this.textBox1.AutoCompleteCustomSource = ac;//设置该文本框的自动完成数据源
+
+                    var data = context.Leaders.Where(b => b.WorkUnitId == workUnits[0].Id).ToList();
+                    dataGridView1.DataSource = data;
+                }                
             }
         }
 
@@ -270,6 +277,26 @@ namespace EFCoreDemo
                 dataGridView1.DataSource = data;
             }
                 
+        }
+
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        {
+            using (BusinessContext context = new BusinessContext())
+            {
+                var data = context.FamilyMembers.Where(b => !b.IsValid).ToList();
+                foreach(FamilyMember family in data)
+                {
+                    if (IDCardValidation.CheckIDCard(family.CardNo))
+                    {
+                        family.IsValid = true;
+                        context.Update(family);
+                    }
+
+                }
+                context.SaveChanges();
+                var mCount = context.FamilyMembers.Where(b => !b.IsValid).Count();
+                MessageBox.Show("共有" + mCount.ToString() + "位同志未通过身份证校验。");                
+            }                
         }
     }
 }

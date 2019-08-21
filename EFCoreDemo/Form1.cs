@@ -118,6 +118,8 @@ namespace EFCoreDemo
                 style2.CloneStyleFrom(style);
                 style2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Left;
                 ISheet sheet = workbook.GetSheetAt(0);
+                cell = sheet.GetRow(0).GetCell(0);
+                cell.SetCellValue(DateTime.Now.ToString("yyyyMMdd") + "委托查询（工商）");
                 cell = sheet.GetRow(1).GetCell(3);
                 cell.SetCellValue(DateTime.Now.ToString("yyyyMMdd"));
                 for (int i = 0; i < familyMembers.Count; i++)
@@ -156,6 +158,7 @@ namespace EFCoreDemo
             }
             catch (Exception e)
             {
+                MessageBox.Show(e.Message);
                 return e.Message;
             }
         }
@@ -232,7 +235,7 @@ namespace EFCoreDemo
                 List<FamilyMember> familyMembers = new List<FamilyMember>();
                 foreach (WorkUnit workUnit in workUnits)
                 {
-                    var leaders = workUnit.Leaders.OrderBy(b => b.OrderId);
+                    var leaders = workUnit.Leaders.OrderBy(b => b.OrderId).ToList();
                     foreach (Leader leader in workUnit.Leaders)
                     {
                         familyMembers.AddRange(leader.FamilyMembers.OrderBy(b=>b.OrderId));

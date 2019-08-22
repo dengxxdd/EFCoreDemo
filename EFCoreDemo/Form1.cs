@@ -236,9 +236,9 @@ namespace EFCoreDemo
                 foreach (WorkUnit workUnit in workUnits)
                 {
                     var leaders = workUnit.Leaders.OrderBy(b => b.OrderId).ToList();
-                    foreach (Leader leader in workUnit.Leaders)
+                    foreach (Leader leader in leaders)
                     {
-                        familyMembers.AddRange(leader.FamilyMembers.OrderBy(b=>b.OrderId));
+                        familyMembers.AddRange(leader.FamilyMembers.OrderBy(b=>b.OrderId).ToList());
                     }
                     workUnit.IsEntrust = true;
                 }

@@ -19,7 +19,124 @@ namespace EFCoreDemo
             backgroundWorker1.WorkerSupportsCancellation = true;
         }
 
+        private List<FeedbackBusiness> getFeedbackInfO(string fileName)
+        {
 
+            XlsToDb xlsToDb = new XlsToDb();
+            DataTable dt = xlsToDb.ConvertToDataTable(fileName);
+            DataTable dt2 = new DataTable();
+            dt2 = dt.Clone();
+            List<FeedbackBusiness> feedbackBusinesses = new List<FeedbackBusiness>();
+            FeedbackBusiness feedbackBusiness;
+            for(int i = 1; i < dt.Rows.Count; i++)
+            {
+                DataRow dr = dt.Rows[i];
+                feedbackBusiness = new FeedbackBusiness();
+                feedbackBusiness.FullName = dr[0].ToString();
+                feedbackBusiness.CardNo = dr[1].ToString();
+                feedbackBusiness.BusinessName = dr[2].ToString();
+                feedbackBusiness.BusinessType = dr[3].ToString();
+                if (!(dr[4] == null || dr[4].ToString().Length == 0))
+                {
+                    feedbackBusiness.EstDate = DateTime.Parse(dr[4].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.EstDate = DateTime.MinValue;
+                }
+                feedbackBusiness.LegalRep = dr[5].ToString();
+                feedbackBusiness.Residence = dr[6].ToString();
+                feedbackBusiness.State =dr[7].ToString();
+                if (dr[8].ToString().Equals("是"))
+                {
+                    feedbackBusiness.IsAbnormal = true;
+                }
+                else
+                {
+                    feedbackBusiness.IsAbnormal = false;
+                }
+                if (dr[9].ToString().Equals("是"))
+                {
+                    feedbackBusiness.IsOutrage = true;
+                }
+                else
+                {
+                    feedbackBusiness.IsOutrage = false;
+                }
+                if (!(dr[10] == null || dr[10].ToString().Length == 0))
+                {
+                    feedbackBusiness.RevokeDate = DateTime.Parse(dr[10].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.RevokeDate = DateTime.MinValue;
+                }
+                if (!(dr[11] == null || dr[11].ToString().Length == 0))
+                {
+                    feedbackBusiness.LogoffDate = DateTime.Parse(dr[11].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.LogoffDate = DateTime.MinValue;
+                }
+                feedbackBusiness.CreditCode = dr[12].ToString();
+                if (!(dr[13] == null || dr[13].ToString().Length == 0))
+                {
+                    feedbackBusiness.RegisteredCapital = decimal.Parse(dr[13].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.RegisteredCapital = 0;
+                }
+                feedbackBusiness.Currency =dr[14].ToString();
+                if (!(dr[15] == null || dr[15].ToString().Length == 0))
+                {
+                    feedbackBusiness.Subscribe = decimal.Parse(dr[15].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.Subscribe = 0;
+                }
+                if (!(dr[16] == null || dr[16].ToString().Length == 0))
+                {
+                    feedbackBusiness.Proportion = decimal.Parse(dr[16].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.Proportion = 0;
+                }
+                if (!(dr[17] == null || dr[17].ToString().Length == 0))
+                {
+                    feedbackBusiness.PutupDate = DateTime.Parse(dr[17].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.PutupDate = DateTime.MinValue;
+                }                
+                feedbackBusiness.BusinessPost = dr[18].ToString();
+                if (!(dr[19] == null || dr[19].ToString().Length == 0))
+                {
+                    feedbackBusiness.TakeStartDate = DateTime.Parse(dr[19].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.TakeStartDate = DateTime.MinValue;
+                }
+                if (!(dr[20] == null || dr[20].ToString().Length == 0))
+                {
+                    feedbackBusiness.TakEndDate = DateTime.Parse(dr[20].ToString());
+                }
+                else
+                {
+                    feedbackBusiness.TakEndDate = DateTime.MinValue;
+                }
+                feedbackBusiness.Scope = dr[21].ToString();
+                feedbackBusiness.CreateTime = DateTime.Now.Date;
+                feedbackBusinesses.Add(feedbackBusiness);
+                
+            }
+            return feedbackBusinesses;            
+        }
 
         private WorkUnit getCollectInfo(string fileName)
         {
@@ -310,45 +427,74 @@ namespace EFCoreDemo
             foreach (FileInfo fi in fileInformations)
             {
                 worker.ReportProgress(0, "正在导入" + fi.Name + "文件。\r\n\r\n");
-                WorkUnit workUnit = getCollectInfo(fi.FullName);
-                if (workUnit != null)
+                if (fi.Name.IndexOf("工商反馈") > -1)
                 {
-                    using (BusinessContext context = new BusinessContext())
+                    List<FeedbackBusiness> feedbackBusinesses = getFeedbackInfO(fi.FullName);
+                    if (feedbackBusinesses.Count>0)
                     {
-                        var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Where(c => c.UnitName == workUnit.UnitName);
-                        if (dworkUnit.Count() > 0)
-                        {
-                            WorkUnit work = dworkUnit.First();
-
-                            //List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
-                            //context.Leaders.RemoveRange(leaders);
-                            context.WorkUnits.Remove(work);
+                        using (BusinessContext context = new BusinessContext())
+                        {                            
+                            //context.Database.EnsureCreated();
+                            context.AddRange(feedbackBusinesses);
                             context.SaveChanges();
                         }
-                        //context.Database.EnsureCreated();
-                        context.Add(workUnit);
-                        context.SaveChanges();
-                    }
-                    if (File.Exists(moveDir + fi.Name))
-                    {
-                        File.Delete(moveDir + fi.Name);
-                    }
+                        if (File.Exists(moveDir + fi.Name))
+                        {
+                            File.Delete(moveDir + fi.Name);
+                        }
 
-                    int familyCount = 0;
-                    foreach(Leader leader in workUnit.Leaders)
-                    {
-                        familyCount += leader.FamilyMembers.Count;
+                        worker.ReportProgress(0,fi.Name+ "导入完成；\r\n\r\n");
+                        fi.MoveTo(moveDir + fi.Name);
+                        worker.ReportProgress(0, "移动" + fi.Name + "文件至已分拣目录\r\n\r\n");
                     }
-
-                    worker.ReportProgress(0, "导入完成，" + workUnit.UnitName + "共导入" + workUnit.Leaders.Count + "位领导干部信息、" +
-                        familyCount + "位家庭成员信息（含领导本人）；\r\n\r\n");
-                    fi.MoveTo(moveDir + fi.Name);
-                    worker.ReportProgress(0, "移动"+fi.Name+ "文件至已分拣目录\r\n\r\n");
+                    else
+                    {
+                        worker.ReportProgress(0, "导入" + fi.Name + "失败，请检查文件内容。\r\n\r\n");
+                    }
                 }
                 else
                 {
-                    worker.ReportProgress(0, "导入" + fi.Name + "失败，请检查文件内容。\r\n\r\n");
-                }
+                    WorkUnit workUnit = getCollectInfo(fi.FullName);
+                    if (workUnit != null)
+                    {
+                        using (BusinessContext context = new BusinessContext())
+                        {
+                            var dworkUnit = context.WorkUnits.Include(b => b.Leaders).Where(c => c.UnitName == workUnit.UnitName);
+                            if (dworkUnit.Count() > 0)
+                            {
+                                WorkUnit work = dworkUnit.First();
+
+                                //List<Leader> leaders = context.Leaders.Where(b => b.WorkUnit == dworkUnit).ToList();
+                                //context.Leaders.RemoveRange(leaders);
+                                context.WorkUnits.Remove(work);
+                                context.SaveChanges();
+                            }
+                            //context.Database.EnsureCreated();
+                            context.Add(workUnit);
+                            context.SaveChanges();
+                        }
+                        if (File.Exists(moveDir + fi.Name))
+                        {
+                            File.Delete(moveDir + fi.Name);
+                        }
+
+                        int familyCount = 0;
+                        foreach (Leader leader in workUnit.Leaders)
+                        {
+                            familyCount += leader.FamilyMembers.Count;
+                        }
+
+                        worker.ReportProgress(0, "导入完成，" + workUnit.UnitName + "共导入" + workUnit.Leaders.Count + "位领导干部信息、" +
+                            familyCount + "位家庭成员信息（含领导本人）；\r\n\r\n");
+                        fi.MoveTo(moveDir + fi.Name);
+                        worker.ReportProgress(0, "移动" + fi.Name + "文件至已分拣目录\r\n\r\n");
+                    }
+                    else
+                    {
+                        worker.ReportProgress(0, "导入" + fi.Name + "失败，请检查文件内容。\r\n\r\n");
+                    }
+                }                
+                
             }
            worker.ReportProgress(0, "导入完成，请关闭窗口\r\n");
         }

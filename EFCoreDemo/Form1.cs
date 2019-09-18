@@ -6,6 +6,7 @@ using System.Data;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using NPOI.SS.Util;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -77,7 +78,268 @@ namespace EFCoreDemo
             }
             nCell[1] = n - 1;
             return nCell;
-        }        
+        }
+
+        public string CompareToFile(Leader leader)
+        {
+            Dictionary<string, string> templateStr = new Dictionary<string, string>();
+            templateStr["reportInvest"] = "{Relation+Name}投资{BusinessName},认缴出资{Subscribe}万元，出资比例{Proportion}%。";
+            templateStr["feedbackInvest"] = "{Relation+Name}投资{BusinessName},注册资本{RegisteredCapital}万元,认缴出资{Subscribe}万元，出资比例{Proportion}%。";
+            templateStr["Post"] = "{Relation+Name}在{BusinessName}担任{Post}职务";
+
+
+            int rowIndex = 0;   //excel新建行的行号
+            IWorkbook workbook;
+            IRow row;
+            ICell cell;
+            ICellStyle style, style2;
+            //HSSFCellStyle celStyle = getCellStyle();
+
+            try
+            {
+                using (FileStream file = new FileStream(System.Environment.CurrentDirectory + "\\Templates\\比对模板.xlsx", FileMode.Open, FileAccess.Read))
+                {
+                    workbook = WorkbookFactory.Create(file);
+                }
+
+                if (workbook is HSSFWorkbook)
+                {
+                    style = ((HSSFWorkbook)workbook).CreateCellStyle();
+                    style2 = ((HSSFWorkbook)workbook).CreateCellStyle();
+                }
+                else
+                {
+                    style = ((XSSFWorkbook)workbook).CreateCellStyle();
+                    style2 = ((XSSFWorkbook)workbook).CreateCellStyle();
+                }
+
+                style.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+                style.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+                style.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+                style.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+                style.BottomBorderColor = 128;
+                style.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+                style.VerticalAlignment = VerticalAlignment.Center;
+                style.WrapText = true;
+                style2.CloneStyleFrom(style);
+                style2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Left;
+                ISheet sheet = workbook.GetSheetAt(0);
+
+                int[] pos = NPOI_CellChange("C3");
+                cell = sheet.GetRow(pos[0]).GetCell(pos[1]);
+                cell.SetCellValue(leader.FullName);
+                pos = NPOI_CellChange("F3");
+                cell = sheet.GetRow(pos[0]).GetCell(pos[1]);
+                cell.SetCellValue(leader.WorkUnit.UnitName);
+                pos = NPOI_CellChange("C4");
+                cell = sheet.GetRow(pos[0]).GetCell(pos[1]);
+                cell.SetCellValue(leader.Post);
+                pos = NPOI_CellChange("F4");
+                cell = sheet.GetRow(pos[0]).GetCell(pos[1]);
+                cell.SetCellValue(leader.Rank);
+                pos = NPOI_CellChange("C5");
+                cell = sheet.GetRow(pos[0]).GetCell(pos[1]);
+                if (leader.IsExist)
+                {
+                    cell.SetCellValue("存在");
+                }
+                else
+                {
+                    cell.SetCellValue("不存在");
+                }
+
+                pos = NPOI_CellChange("E5");
+                cell = sheet.GetRow(pos[0]).GetCell(pos[1]);
+                if (leader.IsRegulated)
+                {
+                    cell.SetCellValue("是");
+                }
+                else
+                {
+                    cell.SetCellValue("否");
+                }
+                pos = NPOI_CellChange("G5");
+                cell = sheet.GetRow(pos[0]).GetCell(pos[1]);
+                if (!(leader.ExitModel == null || leader.ExitModel.Length == 0))
+                {
+                    cell.SetCellValue(leader.ExitModel);
+                }
+
+                //MyInsertRow(sheet, 6, leader.FamilyMembers.Count, row);
+
+                Dictionary<string, List<ReportBusiness>> dicReportBusiness = new Dictionary<string, List<ReportBusiness>>();
+                Dictionary<string, List<FeedbackBusiness>> dicFeedbackBusiness = new Dictionary<string, List<FeedbackBusiness>>();
+
+                //reportCount：个人报告的企业总数，feedbackCount：反馈的企业总数，
+                //addCount：需增加的表格行数，如果个人报告和反馈企业数都为0，行数为1，否则，行数为个人报告和反馈企业总数值大的那个数
+                int reportCount = 0, feedbackCount = 0,addCount=0;
+
+                for (int i = 0; i < leader.FamilyMembers.Count; i++)
+                {
+                    FamilyMember familyMember = leader.FamilyMembers[i];
+                    if (familyMember.Relation != "本人")
+                    {
+                        rowIndex = 6 + i-1;
+                        //row = sheet.CreateRow(rowIndex);
+                        sheet.ShiftRows(
+                            rowIndex,                            //--开始行
+                            sheet.LastRowNum,                      //--结束行
+                                                                   //leader.FamilyMembers.Count,                             //--移动大小(行数)--往下移动
+                            1,
+                            true,                                  //是否复制行高
+                            false//,                               //是否重置行高
+                        );
+                        row = sheet.CreateRow(rowIndex);
+
+                        for (int j = 0; j < 7; j++)
+                        {
+                            cell = row.CreateCell(j);
+                            if (j == 1)     //关系栏单元格居中，其他的靠左
+                            {
+                                cell.CellStyle = style;
+                            }
+                            else
+                            {
+                                cell.CellStyle = style2;
+                            }                            
+                        }
+                        sheet.AddMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 2, 3));
+                        sheet.AddMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 4, 6));
+                        row.Height = 36 * 20;
+                        cell = row.GetCell(1);
+                        cell.SetCellValue(familyMember.Relation);
+                        cell = row.GetCell(2);
+                        cell.SetCellValue(familyMember.FullName);
+                        cell = row.GetCell(4);
+                        cell.SetCellValue(familyMember.WorkUnit);
+                        if (familyMember.ReportBusinesses.Count > 0)
+                        {
+                            dicReportBusiness[familyMember.Relation + familyMember.FullName] = familyMember.ReportBusinesses;
+                            reportCount += familyMember.ReportBusinesses.Count;     //统计个人填报总共有多少家企业，在后面的个人填报情况中判断要增加几行
+                        }                        
+                        using (BusinessContext context = new BusinessContext())
+                        {
+                            var feedbacks = context.FeedbackBusinesses.Where(a=>a.CardNo== familyMember.CardNo).ToList();
+                            if (feedbacks.Count > 0)
+                            {
+                                dicFeedbackBusiness[familyMember.Relation+familyMember.FullName] = feedbacks;
+                                feedbackCount += feedbacks.Count;       //统计信息反馈总共有多少家企业，在后面的个人填报情况中判断要增加几行
+                            }                            
+                        }
+
+                    }                    
+                }
+
+                sheet.AddMergedRegion(new CellRangeAddress(rowIndex - leader.FamilyMembers.Count+1, rowIndex, 0, 0));
+                if (reportCount < feedbackCount)
+                {
+                    addCount = feedbackCount;
+                }
+                else
+                {
+                    addCount = reportCount;
+                }
+                if (addCount == 0)
+                {
+                    addCount = 1;
+                }
+                rowIndex+=2;
+                int rowIndex2 = rowIndex;//记录当前行号
+
+                sheet.ShiftRows(
+                            rowIndex,                            //--开始行
+                            sheet.LastRowNum,                      //--结束行
+                                                                   //leader.FamilyMembers.Count,                             //--移动大小(行数)--往下移动
+                            addCount,
+                            true,                                  //是否复制行高
+                            false//,                               //是否重置行高
+                        );
+
+                for(int i = 0; i < addCount; i++)
+                {
+                    row = sheet.CreateRow(rowIndex);
+                    for (int j = 0; j < 7; j++)
+                    {
+                        cell = row.CreateCell(j);
+                        cell.CellStyle = style2;
+                    }
+                    sheet.AddMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 1, 3));
+                    sheet.AddMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 4, 6));
+                    row.Height = 50 * 20;
+                    rowIndex++;
+                }
+
+                sheet.AddMergedRegion(new CellRangeAddress(rowIndex - addCount-1, rowIndex-1, 0, 0));
+
+                rowIndex = rowIndex2;
+                reportCount = 1;
+                feedbackCount = 1;
+                foreach (KeyValuePair<string, List<ReportBusiness>> reports in dicReportBusiness)
+                {
+                    foreach (ReportBusiness report in reports.Value)
+                    {
+                        row = sheet.GetRow(rowIndex);                        
+                        cell = row.GetCell(1);
+
+                        if (report.Subscribe != 0)
+                        {
+                            //templateStr["reportInvest"] = "{Relation+Name}投资{BusinessName},认缴出资{Subscribe}万元，出资比例{Proportion}%。";
+                            cell.SetCellValue(reportCount.ToString()+"."+templateStr["reportInvest"].Replace("{Relation+Name}", reports.Key).Replace("{BusinessName}", report.BusinessName).Replace("{Subscribe}", report.Subscribe.ToString())
+                            .Replace("{Proportion}", (report.Proportion * 100).ToString()));
+                        }
+                        else
+                        {
+                            //templateStr["Post"] = "{Relation+Name}在{BusinessName}担任{Post}职务";
+                            cell.SetCellValue(reportCount.ToString() + "." + templateStr["Post"].Replace("{Relation+Name}", reports.Key).Replace("{BusinessName}", report.BusinessName).Replace("{Post}", report.BusinessPost));
+                        }                        
+                        rowIndex++;
+                        reportCount++;
+                    }
+                }
+
+                rowIndex = rowIndex2;
+                foreach (KeyValuePair<string, List<FeedbackBusiness>> feedbacks in dicFeedbackBusiness)
+                {
+                    foreach (FeedbackBusiness feedback in feedbacks.Value)
+                    {
+                        row = sheet.GetRow(rowIndex);
+                        cell = row.GetCell(4);
+                        if (feedback.Subscribe != 0)
+                        {
+                            //templateStr["feedbackInvest"] = "{Relation+Name}投资{BusinessName},注册资本{RegisteredCapital}万元,认缴出资{Subscribe}万元，出资比例{Proportion}%。";
+                            cell.SetCellValue(feedbackCount.ToString() + "." + templateStr["feedbackInvest"].Replace("{Relation+Name}", feedbacks.Key).Replace("{BusinessName}", feedback.BusinessName)
+                                .Replace("{RegisteredCapital}",feedback.RegisteredCapital.ToString()).Replace("{ Subscribe}", feedback.Subscribe.ToString())
+                            .Replace("{Proportion}", (feedback.Proportion * 100).ToString()));
+                        }
+                        else
+                        {
+                            //templateStr["Post"] = "{Relation+Name}在{BusinessName}担任{Post}职务";
+                            cell.SetCellValue(feedbackCount.ToString() + "." + templateStr["Post"].Replace("{Relation+Name}", feedbacks.Key).Replace("{BusinessName}", feedback.BusinessName).Replace("{Post}", feedback.BusinessPost));
+                        }
+                        rowIndex++;
+                        feedbackCount++;
+                    }
+                }
+
+                string targetDir = Directory.GetCurrentDirectory() + "\\比对表\\" + leader.OrderId.ToString() +". "+ leader.FullName+".xlsx";
+                if (File.Exists(targetDir))
+                {
+                    File.Delete(targetDir);
+                }
+                using (FileStream fileStream = File.Open(targetDir, FileMode.Create, FileAccess.Write))
+                {
+                    workbook.Write(fileStream);
+                    fileStream.Close();
+                }
+                workbook.Close();
+                return "OK";
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                return e.Message;
+            }
+        }
 
         //将比对结果添加到汇总表         
         public string CollectToFile( List<FamilyMember> familyMembers)
@@ -306,37 +568,22 @@ namespace EFCoreDemo
 
         private void toolStripButton4_Click(object sender, EventArgs e)
         {
-            FeedbackBusiness feedbackBusiness = new FeedbackBusiness();
-            feedbackBusiness.FullName = "张三";
-            feedbackBusiness.CardNo = "430103198001053012";
-            feedbackBusiness.BusinessName = "湖南崇山投资有限公司";
-            feedbackBusiness.BusinessType = "有限责任公司（台港澳自然人独资";
-            feedbackBusiness.EstDate = DateTime.Parse("2002-09-10");
-            feedbackBusiness.LegalRep = "邵四";
-            feedbackBusiness.Residence = "长沙县大溪镇大同街000号";
-            feedbackBusiness.State = "存续";
-            feedbackBusiness.LogoffDate = DateTime.MinValue;
-            feedbackBusiness.RevokeDate = DateTime.MinValue;
-            feedbackBusiness.IsAbnormal = false;
-            feedbackBusiness.IsOutrage = false;
-            feedbackBusiness.CreditCode = "9143022MA4Y6ABC90";
-            feedbackBusiness.RegisteredCapital = 5000;
-            feedbackBusiness.Currency = "人民币";
-            feedbackBusiness.Subscribe = 2000;
-            feedbackBusiness.Proportion = 0.4M;
-            feedbackBusiness.PutupDate = DateTime.Parse("2066-09-28");
-            feedbackBusiness.BusinessPost = "执行董事";
-            feedbackBusiness.TakeStartDate = DateTime.MinValue;
-            feedbackBusiness.TakEndDate = DateTime.MinValue;
-            feedbackBusiness.Scope = "房屋租凭；停车场建设等";
-            feedbackBusiness.CreateTime = DateTime.Now.Date;
-            using (BusinessContext context = new BusinessContext())
-            {                
-                context.Database.EnsureCreated();
-                context.Add(feedbackBusiness);
-                context.SaveChanges();
+            //List<WorkUnit> workUnits = new List<WorkUnit>();
+            using(BusinessContext context = new BusinessContext())
+            {
+                var workUnits = context.WorkUnits.Include(a => a.Leaders).ThenInclude(b => b.FamilyMembers).ThenInclude(c=>c.ReportBusinesses).Where(a => a.IsEntrust == false).ToList();
+                foreach(WorkUnit unit in workUnits)
+                {
+                    foreach(Leader leader in unit.Leaders)
+                    {
+                        CompareToFile(leader);
+                    }
+                }
+                
             }
 
+
         }
+        
     }
 }

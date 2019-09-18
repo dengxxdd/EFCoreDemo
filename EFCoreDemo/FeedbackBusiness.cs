@@ -43,14 +43,6 @@ namespace EFCoreDemo
         /// </summary>
         public string State { get; set; }
         /// <summary>
-        /// 登记状态
-        /// </summary>
-        public DateTime LogoffDate { get; set; }
-        /// <summary>
-        /// 吊销时间
-        /// </summary>
-        public DateTime RevokeDate { get; set; }
-        /// <summary>
         /// 是否异常
         /// </summary>
         public bool IsAbnormal { get; set; }
@@ -58,6 +50,14 @@ namespace EFCoreDemo
         /// 是否严重违法
         /// </summary>
         public bool IsOutrage { get; set; }
+        /// <summary>
+        /// 吊销时间
+        /// </summary>
+        public DateTime RevokeDate { get; set; }
+        /// <summary>
+        /// 注销时间
+        /// </summary>
+        public DateTime LogoffDate { get; set; }        
         /// <summary>
         /// 统一信用代码
         /// </summary>

@@ -10,7 +10,7 @@ using System.ComponentModel;
 namespace EFCoreDemo
 {
     public partial class FrmImportProcess : Form
-    {        
+    {
 
         public FrmImportProcess()
         {
@@ -65,82 +65,85 @@ namespace EFCoreDemo
                             }
                             else
                             {
-                                if (!(leader.CardNo == null || leader.CardNo.Length == 0))
+                                if (!dr[1].ToString().Equals(""))
                                 {
-                                    if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
+                                    if (!(leader.CardNo == null || leader.CardNo.Length == 0))
                                     {
-                                        if (familyMember.ReportBusinesses == null)
+                                        if (!(reportBusiness.BusinessName == null || reportBusiness.BusinessName.Length == 0))
                                         {
-                                            familyMember.ReportBusinesses = new List<ReportBusiness>();
+                                            if (familyMember.ReportBusinesses == null)
+                                            {
+                                                familyMember.ReportBusinesses = new List<ReportBusiness>();
+                                            }
+                                            familyMember.ReportBusinesses.Add(reportBusiness);
+                                            reportBusiness = new ReportBusiness();
                                         }
-                                        familyMember.ReportBusinesses.Add(reportBusiness);
-                                        reportBusiness = new ReportBusiness();
+
+                                        if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
+                                        {
+                                            if (leader.FamilyMembers == null)
+                                            {
+                                                leader.FamilyMembers = new List<FamilyMember>();
+                                            }
+                                            leader.FamilyMembers.Add(familyMember);
+                                            familyMember = new FamilyMember();
+                                        }
+
+                                        leaders.Add(leader);
+                                        leader = new Leader();
+                                    }
+                                    leader.OrderId = int.Parse(dr[0].ToString());
+                                    leader.FullName = dr[1].ToString().Replace(" ", "").Replace("　", "");
+                                    leader.CardNo = dr[2].ToString();
+                                    backgroundWorker1.ReportProgress(0, "正在导入领导干部" + leader.FullName + "信息。\r\n\r\n");
+
+                                    leader.Post = dr[3].ToString();
+                                    leader.Rank = dr[4].ToString();
+                                    if (dr[5].ToString().Equals("存在"))
+                                    {
+                                        leader.IsExist = true;
+                                    }
+                                    else
+                                    {
+                                        leader.IsExist = false;
+                                    }
+                                    if (dr[6].ToString().Equals("是"))
+                                    {
+                                        leader.IsRegulated = true;
+                                    }
+                                    else
+                                    {
+                                        leader.IsRegulated = false;
                                     }
 
-                                    if (!(familyMember.CardNo == null || familyMember.CardNo.Length == 0))
+                                    if (!dr[7].ToString().Equals(""))
                                     {
-                                        if (leader.FamilyMembers == null)
-                                        {
-                                            leader.FamilyMembers = new List<FamilyMember>();
-                                        }
-                                        leader.FamilyMembers.Add(familyMember);
-                                        familyMember = new FamilyMember();
+                                        leader.ExitModel = dr[7].ToString();
                                     }
 
-                                    leaders.Add(leader);
-                                    leader = new Leader();
-                                }
-                                leader.OrderId = int.Parse(dr[0].ToString());
-                                leader.FullName = dr[1].ToString().Replace(" ","").Replace("　","");
-                                leader.CardNo = dr[2].ToString();
-                                backgroundWorker1.ReportProgress(0, "正在导入领导干部" + leader.FullName + "信息。\r\n\r\n");                                
+                                    familyMember = new FamilyMember();
+                                    orderId = 1;
+                                    familyMember.OrderId = orderId;
+                                    orderId++;
 
-                                leader.Post = dr[3].ToString();
-                                leader.Rank = dr[4].ToString();
-                                if (dr[5].ToString().Equals("存在"))
-                                {
-                                    leader.IsExist = true;
-                                }
-                                else
-                                {
-                                    leader.IsExist = false;
-                                }
-                                if (dr[6].ToString().Equals("是"))
-                                {
-                                    leader.IsRegulated = true;
-                                }
-                                else
-                                {
-                                    leader.IsRegulated = false;
-                                }
+                                    familyMember.FullName = leader.FullName;
+                                    familyMember.CardNo = leader.CardNo;
+                                    familyMember.Relation = "本人";
+                                    familyMember.WorkUnit = "本单位";
+                                    familyMember.IsValid = true;
+                                    if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
+                                    {
+                                        backgroundWorker1.ReportProgress(0, familyMember.FullName + "身份证号码未通过验证。\r\n\r\n");
+                                        familyMember.IsValid = false;
+                                    }
 
-                                if (!dr[7].ToString().Equals(""))
-                                {
-                                    leader.ExitModel = dr[7].ToString();
-                                }
-
-                                familyMember = new FamilyMember();
-                                orderId=1;
-                                familyMember.OrderId = orderId;
-                                orderId++;
-
-                                familyMember.FullName = leader.FullName;
-                                familyMember.CardNo = leader.CardNo;
-                                familyMember.Relation = "本人";
-                                familyMember.WorkUnit = "本单位";
-                                familyMember.IsValid = true;
-                                if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
-                                {
-                                    backgroundWorker1.ReportProgress(0, familyMember.FullName + "身份证号码未通过验证。\r\n\r\n");
-                                    familyMember.IsValid = false;
-                                }
-
-                                if (leader.FamilyMembers == null)
-                                {
-                                    leader.FamilyMembers = new List<FamilyMember>();
-                                }
-                                leader.FamilyMembers.Add(familyMember);
-                                familyMember = new FamilyMember();
+                                    if (leader.FamilyMembers == null)
+                                    {
+                                        leader.FamilyMembers = new List<FamilyMember>();
+                                    }
+                                    leader.FamilyMembers.Add(familyMember);
+                                    familyMember = new FamilyMember();
+                                }                                
                             }
                         }
 
@@ -166,13 +169,14 @@ namespace EFCoreDemo
                                 familyMember = new FamilyMember();
                             }
 
-
+                            
                             familyMember.OrderId = orderId;
                             orderId++;
                             familyMember.Relation = dr[8].ToString();
                             familyMember.FullName = dr[9].ToString();
                             familyMember.CardNo = dr[10].ToString();
                             familyMember.IsValid = true;
+                            backgroundWorker1.ReportProgress(0, "正在导入" + familyMember.Relation + familyMember.FullName + "信息。\r\n\r\n");
                             if (!IDCardValidation.CheckIDCard(familyMember.CardNo))
                             {
                                 backgroundWorker1.ReportProgress(0, familyMember.FullName + "身份证号码未通过验证。\r\n\r\n");
@@ -244,6 +248,7 @@ namespace EFCoreDemo
                             {
                                 reportBusiness.IsRelevant = false;
                             }
+                            reportBusiness.Remarks = dr[25].ToString();
                         }
                     }
                 }
@@ -338,7 +343,7 @@ namespace EFCoreDemo
                     worker.ReportProgress(0, "导入完成，" + workUnit.UnitName + "共导入" + workUnit.Leaders.Count + "位领导干部信息、" +
                         familyCount + "位家庭成员信息（含领导本人）；\r\n\r\n");
                     fi.MoveTo(moveDir + fi.Name);
-                    worker.ReportProgress(0, "移动"+fi.Name+"文件至已分拣目录");
+                    worker.ReportProgress(0, "移动"+fi.Name+ "文件至已分拣目录\r\n\r\n");
                 }
                 else
                 {

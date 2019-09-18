@@ -13,6 +13,8 @@ namespace EFCoreDemo
         public DbSet<FamilyMember> FamilyMembers { get; set; }
 
         public DbSet<ReportBusiness> ReportBusinesses { get; set; }
+
+        public DbSet<FeedbackBusiness> FeedbackBusinesses { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {            
             optionsBuilder.UseSqlite("Data Source=gszz.db");

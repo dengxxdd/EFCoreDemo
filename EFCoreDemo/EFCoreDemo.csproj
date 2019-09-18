@@ -183,6 +183,7 @@
     <Compile Include="BusinessContext.cs" />
     <Compile Include="DirectoryAllFiles.cs" />
     <Compile Include="FamilyMember.cs" />
+    <Compile Include="FeedbackBusiness.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

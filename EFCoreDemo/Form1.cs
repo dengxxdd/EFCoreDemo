@@ -165,6 +165,7 @@ namespace EFCoreDemo
 
         private void ToolStripButton1_Click(object sender, EventArgs e)
         {
+            //MessageBox.Show("43010319841016152X" + IDCardValidation.CheckIDCard("43010319841016152X").ToString());
             //显示进度窗体
             FrmImportProcess frm = new FrmImportProcess();
             frm.StartPosition = FormStartPosition.CenterScreen;
@@ -238,7 +239,7 @@ namespace EFCoreDemo
                     var leaders = workUnit.Leaders.OrderBy(b => b.OrderId).ToList();
                     foreach (Leader leader in leaders)
                     {
-                        familyMembers.AddRange(leader.FamilyMembers.OrderBy(b=>b.OrderId).ToList());
+                        familyMembers.AddRange(leader.FamilyMembers.Where(a=>a.IsValid).OrderBy(b=>b.OrderId).ToList());
                     }
                     workUnit.IsEntrust = true;
                 }
@@ -301,6 +302,41 @@ namespace EFCoreDemo
                 var mCount = context.FamilyMembers.Where(b => !b.IsValid).Count();
                 MessageBox.Show("共有" + mCount.ToString() + "位同志未通过身份证校验。");                
             }                
+        }
+
+        private void toolStripButton4_Click(object sender, EventArgs e)
+        {
+            FeedbackBusiness feedbackBusiness = new FeedbackBusiness();
+            feedbackBusiness.FullName = "张三";
+            feedbackBusiness.CardNo = "430103198001053012";
+            feedbackBusiness.BusinessName = "湖南崇山投资有限公司";
+            feedbackBusiness.BusinessType = "有限责任公司（台港澳自然人独资";
+            feedbackBusiness.EstDate = DateTime.Parse("2002-09-10");
+            feedbackBusiness.LegalRep = "邵四";
+            feedbackBusiness.Residence = "长沙县大溪镇大同街000号";
+            feedbackBusiness.State = "存续";
+            feedbackBusiness.LogoffDate = DateTime.MinValue;
+            feedbackBusiness.RevokeDate = DateTime.MinValue;
+            feedbackBusiness.IsAbnormal = false;
+            feedbackBusiness.IsOutrage = false;
+            feedbackBusiness.CreditCode = "9143022MA4Y6ABC90";
+            feedbackBusiness.RegisteredCapital = 5000;
+            feedbackBusiness.Currency = "人民币";
+            feedbackBusiness.Subscribe = 2000;
+            feedbackBusiness.Proportion = 0.4M;
+            feedbackBusiness.PutupDate = DateTime.Parse("2066-09-28");
+            feedbackBusiness.BusinessPost = "执行董事";
+            feedbackBusiness.TakeStartDate = DateTime.MinValue;
+            feedbackBusiness.TakEndDate = DateTime.MinValue;
+            feedbackBusiness.Scope = "房屋租凭；停车场建设等";
+            feedbackBusiness.CreateTime = DateTime.Now.Date;
+            using (BusinessContext context = new BusinessContext())
+            {                
+                context.Database.EnsureCreated();
+                context.Add(feedbackBusiness);
+                context.SaveChanges();
+            }
+
         }
     }
 }
